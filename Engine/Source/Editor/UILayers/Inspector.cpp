@@ -622,10 +622,10 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 		ImGuiUtils::ImGuiIntProperty("Max Count", pParticleEmitterComponent->GetSpawnCount(), cd::Unit::None, 1, 300);
 		ImGuiUtils::ImGuiVectorProperty("Velocity", pParticleEmitterComponent->GetEmitterVelocity());
 		ImGuiUtils::ImGuiVectorProperty("Random Velocity", pParticleEmitterComponent->GetRandomVelocity());
-		ImGuiUtils::ImGuiBoolProperty("RandomVelocity", pParticleEmitterComponent->GetRandomVelocityState());
+		ImGuiUtils::ImGuiBoolProperty("RandomVelocity State", pParticleEmitterComponent->GetRandomVelocityState());
 		ImGuiUtils::ImGuiVectorProperty("Acceleration", pParticleEmitterComponent->GetEmitterAcceleration());
 		ImGuiUtils::ColorPickerProperty("Color", pParticleEmitterComponent->GetEmitterColor());
-		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime());
+		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime(),cd::Unit::None, 0, 6);
 		if (ImGuiUtils::ImGuiBoolProperty("Instance State", pParticleEmitterComponent->GetInstanceState()))
 		{
 			pParticleEmitterComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
