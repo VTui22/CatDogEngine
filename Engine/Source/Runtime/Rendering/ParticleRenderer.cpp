@@ -159,9 +159,16 @@ void ParticleRenderer::Render(float deltaTime)
 
 			constexpr StringCrc ParticleSampler("s_texColor");
 			bgfx::setTexture(0, GetRenderContext()->GetUniform(ParticleSampler), m_particleTextureHandle);
-			bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetParticleVertexBufferHandle() });
-			bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetParticleIndexBufferHandle() });
-
+			if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Sprite)
+			{
+				bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetSpriteParticleVertexBufferHandle() });
+				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetSpriteParticleIndexBufferHandle() });
+			}
+			//else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
+			//{
+			//	bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
+			//	bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
+			//}
 
 			bgfx::setInstanceDataBuffer(&idb);
 
@@ -208,8 +215,16 @@ void ParticleRenderer::Render(float deltaTime)
 
 				constexpr StringCrc ParticleSampler("s_texColor");
 				bgfx::setTexture(0, GetRenderContext()->GetUniform(ParticleSampler), m_particleTextureHandle);
-				bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetParticleVertexBufferHandle() });
-				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetParticleIndexBufferHandle() });
+				if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Sprite)
+				{
+					bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetSpriteParticleVertexBufferHandle() });
+					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetSpriteParticleIndexBufferHandle() });
+				}
+				//else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
+				//{
+				//	bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
+				//	bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
+				//}
 
 				bgfx::setState(state_tristrip);
 

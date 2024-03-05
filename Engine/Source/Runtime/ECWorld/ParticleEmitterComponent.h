@@ -87,11 +87,17 @@ public:
 	float& GetLifeTime() { return m_emitterLifeTime; }
 	void SetEmitterLifeTime(float lifetime) { m_emitterLifeTime = lifetime; }
 
-	uint16_t& GetParticleVertexBufferHandle() { return m_particleVertexBufferHandle; }
-	uint16_t& GetParticleIndexBufferHandle() { return m_particleIndexBufferHandle; }
+	uint16_t& GetSpriteParticleVertexBufferHandle() { return m_spriteParticleVertexBufferHandle; }
+	uint16_t& GetSpriteParticleIndexBufferHandle() { return m_spriteParticleIndexBufferHandle; }
 
-	std::vector<std::byte>& GetVertexBuffer() { return m_particleVertexBuffer; }
-	std::vector<std::byte>& GetIndexBuffer() { return m_particleIndexBuffer; }
+	std::vector<std::byte>& GetSpriteVertexBuffer() { return m_spriteParticleVertexBuffer; }
+	std::vector<std::byte>& GetSpriteIndexBuffer() { return m_spriteParticleIndexBuffer; }
+
+	uint16_t& GetRibbonParticleVertexBufferHandle() { return m_ribbonParticleVertexBufferHandle; }
+	uint16_t& GetRibbonParticleIndexBufferHandle() { return m_ribbonParticleIndexBufferHandle; }
+
+	std::vector<std::byte>& GetRibbonVertexBuffer() { return m_ribbonParticleVertexBuffer; }
+	std::vector<std::byte>& GetRibbonIndexBuffer() { return m_ribbonParticleIndexBuffer; }
 
 	uint16_t& GetEmitterShapeVertexBufferHandle() { return m_emitterShapeVertexBufferHandle; }
 	uint16_t& GetEmitterShapeIndexBufferHandle() { return m_emitterShapeIndexBufferHandle; }
@@ -107,8 +113,11 @@ public:
 	void SetRequiredVertexFormat(const cd::VertexFormat* pVertexFormat) { m_pRequiredVertexFormat = pVertexFormat; }
 
 	//void UpdateBuffer();
-	void PaddingVertexBuffer();
-	void PaddingIndexBuffer();
+	void PaddingSpriteVertexBuffer();
+	void PaddingSpriteIndexBuffer();
+
+	void PaddingRibbonVertexBuffer();
+	void PaddingRibbonIndexBuffer();
 
 	void BuildParticleShape();
 	void RePaddingShapeBuffer();
@@ -161,11 +170,19 @@ private:
 		cd::Vec4f color;
 		cd::UV     uv;
 	};
+
+	//Sprite
 	const cd::VertexFormat* m_pRequiredVertexFormat = nullptr;
-	std::vector<std::byte> m_particleVertexBuffer;
-	std::vector<std::byte> m_particleIndexBuffer;
-	uint16_t m_particleVertexBufferHandle = UINT16_MAX;
-	uint16_t m_particleIndexBufferHandle = UINT16_MAX;
+	std::vector<std::byte> m_spriteParticleVertexBuffer;
+	std::vector<std::byte> m_spriteParticleIndexBuffer;
+	uint16_t m_spriteParticleVertexBufferHandle = UINT16_MAX;
+	uint16_t m_spriteParticleIndexBufferHandle = UINT16_MAX;
+	//Ribbon
+	std::vector<std::byte> m_ribbonParticleVertexBuffer;
+	std::vector<std::byte> m_ribbonParticleIndexBuffer;
+	uint16_t m_ribbonParticleVertexBufferHandle = UINT16_MAX;
+	uint16_t m_ribbonParticleIndexBufferHandle = UINT16_MAX;
+
 
 	//emitter shape vertex/index
 	ParticleEmitterShape m_emitterShape = ParticleEmitterShape::Box;
