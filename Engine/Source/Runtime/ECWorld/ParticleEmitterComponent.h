@@ -118,6 +118,8 @@ public:
 
 	void PaddingRibbonVertexBuffer();
 	void PaddingRibbonIndexBuffer();
+	void RePaddingRibbonVertexBuffer();
+	void RePaddingRibbonIndexBuffer();
 
 	void BuildParticleShape();
 	void RePaddingShapeBuffer();

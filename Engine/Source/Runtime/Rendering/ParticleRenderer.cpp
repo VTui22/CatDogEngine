@@ -164,15 +164,14 @@ void ParticleRenderer::Render(float deltaTime)
 				bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetSpriteParticleVertexBufferHandle() });
 				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetSpriteParticleIndexBufferHandle() });
 			}
-			//else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
-			//{
-			//	bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
-			//	bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
-			//}
-
-			bgfx::setInstanceDataBuffer(&idb);
+			else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
+			{
+				bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
+				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
+			}
 
 			bgfx::setState(state_tristrip);
+			bgfx::setInstanceDataBuffer(&idb);
 
 			if (pEmitterComponent->GetRenderMode() == engine::ParticleRenderMode::Mesh)
 			{
@@ -210,23 +209,27 @@ void ParticleRenderer::Render(float deltaTime)
 						pitch, yaw, roll,
 						pEmitterComponent->GetParticlePool().GetParticle(ii).GetPos().x(), pEmitterComponent->GetParticlePool().GetParticle(ii).GetPos().y(), pEmitterComponent->GetParticlePool().GetParticle(ii).GetPos().z());
 				}
-		
 				bgfx::setTransform(mtx);
-
 				constexpr StringCrc ParticleSampler("s_texColor");
 				bgfx::setTexture(0, GetRenderContext()->GetUniform(ParticleSampler), m_particleTextureHandle);
+				bgfx::setState(state_tristrip);
 				if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Sprite)
 				{
 					bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetSpriteParticleVertexBufferHandle() });
 					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetSpriteParticleIndexBufferHandle() });
 				}
-				//else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
-				//{
-				//	bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
-				//	bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
-				//}
-
-				bgfx::setState(state_tristrip);
+				else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
+				{
+					//bgfx::setState(state_lines);
+					pEmitterComponent->RePaddingRibbonVertexBuffer();
+					pEmitterComponent->RePaddingRibbonIndexBuffer();
+					const bgfx::Memory* pParticleVertexBuffer = bgfx::makeRef(pEmitterComponent->GetRibbonVertexBuffer().data(), static_cast<uint32_t>(pEmitterComponent->GetRibbonVertexBuffer().size()));
+					const bgfx::Memory* pParticleIndexBuffer = bgfx::makeRef(pEmitterComponent->GetRibbonIndexBuffer().data(), static_cast<uint32_t>(pEmitterComponent->GetRibbonIndexBuffer().size()));
+					bgfx::update(bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle()}, 0, pParticleVertexBuffer);
+					bgfx::update(bgfx::DynamicIndexBufferHandle{pEmitterComponent->GetRibbonParticleIndexBufferHandle()}, 0, pParticleIndexBuffer);
+					bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
+					bgfx::setIndexBuffer(bgfx::DynamicIndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
+				}
 
 				if (pEmitterComponent->GetRenderMode() == engine::ParticleRenderMode::Mesh)
 				{
@@ -239,11 +242,6 @@ void ParticleRenderer::Render(float deltaTime)
 			}
 		}
 
-		//pEmitterComponent->RePaddingShapeBuffer();
-		//const bgfx::Memory* pParticleVertexBuffer = bgfx::makeRef(pEmitterComponent->GetEmitterShapeVertexBuffer().data(), static_cast<uint32_t>(pEmitterComponent->GetEmitterShapeVertexBuffer().size()));
-		//const bgfx::Memory* pParticleIndexBuffer = bgfx::makeRef(pEmitterComponent->GetEmitterShapeIndexBuffer().data(), static_cast<uint32_t>(pEmitterComponent->GetEmitterShapeIndexBuffer().size()));
-		//bgfx::update(bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetEmitterShapeVertexBufferHandle()}, 0, pParticleVertexBuffer);
-		//bgfx::update(bgfx::DynamicIndexBufferHandle{pEmitterComponent->GetEmitterShapeIndexBufferHandle()}, 0, pParticleIndexBuffer);
 		constexpr StringCrc emitShapeRangeCrc(shapeRange);
 		bgfx::setUniform(GetRenderContext()->GetUniform(emitShapeRangeCrc), &pEmitterComponent->GetEmitterShapeRange(), 1);
 		bgfx::setTransform(m_pCurrentSceneWorld->GetTransformComponent(entity)->GetWorldMatrix().begin());

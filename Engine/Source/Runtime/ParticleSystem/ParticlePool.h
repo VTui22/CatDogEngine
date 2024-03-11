@@ -31,7 +31,7 @@ public:
 	void AllParticlesReset();
 
 private:
-	int m_maxParticleCount = 75;
+	int m_maxParticleCount = 1;
 	int m_currentActiveCount = 0;
 	int m_currentParticleCount = 0;
 	std::vector<Particle> m_particles;
