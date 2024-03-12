@@ -150,8 +150,8 @@ void ParticleEmitterComponent::PaddingRibbonVertexBuffer()
 	// only a picture now
 	for (int i = 0; i < MAX_VERTEX_COUNT; i += meshVertexCount)
 	{
-		vertexDataBuffer[i] = { cd::Vec3f(0.0f,-1.0f,0.0f),cd::Vec4f(1.0f,1.0f,1.0f,1.0f),cd::Vec2f(0.5f,0.5f)};
-		vertexDataBuffer[i+1] = { cd::Vec3f(0.0f,1.0f,0.0f),cd::Vec4f(1.0f,1.0f,1.0f,1.0f),cd::Vec2f(0.5f,0.5f)};
+		vertexDataBuffer[i] = { cd::Vec3f(0.0f,1.0f,0.0f),cd::Vec4f(1.0f,1.0f,1.0f,1.0f),cd::Vec2f(0.5f,0.5f)};
+		vertexDataBuffer[i+1] = { cd::Vec3f(0.0f,-1.0f,0.0f),cd::Vec4f(1.0f,1.0f,1.0f,1.0f),cd::Vec2f(0.5f,0.5f)};
 	}
 
 	for (int i = 0; i < MAX_VERTEX_COUNT; ++i)
@@ -181,8 +181,8 @@ void ParticleEmitterComponent::PaddingRibbonIndexBuffer()
 	constexpr int meshVertexCount = Particle::GetMeshVertexCount<ParticleType::Ribbon>();;
 	const bool useU16Index = meshVertexCount <= static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()) + 1U;
 	const uint32_t indexTypeSize = useU16Index ? sizeof(uint16_t) : sizeof(uint32_t);
-	const int MAX_VERTEX_COUNT = m_particlePool.GetParticleMaxCount() * meshVertexCount;
-	int indexCountForOneRibbon = 3;
+	const int MAX_VERTEX_COUNT = (m_particlePool.GetParticleMaxCount() - 1)* meshVertexCount;
+	int indexCountForOneRibbon = 6;
 	const uint32_t indicesCount = MAX_VERTEX_COUNT / meshVertexCount * indexCountForOneRibbon;
 	m_ribbonParticleIndexBuffer.resize(indicesCount * indexTypeSize);
 	///
@@ -197,10 +197,13 @@ void ParticleEmitterComponent::PaddingRibbonIndexBuffer()
 	for (uint16_t i = 0; i < MAX_VERTEX_COUNT; i += meshVertexCount)
 	{
 		uint16_t vertexIndex = static_cast<uint16_t>(i);
-
 		indexes.push_back(vertexIndex);
 		indexes.push_back(vertexIndex+1);
 		indexes.push_back(vertexIndex+2);
+
+		indexes.push_back(vertexIndex + 2);
+		indexes.push_back(vertexIndex + 1);
+		indexes.push_back(vertexIndex + 3);
 
 	}
 
@@ -265,8 +268,8 @@ void ParticleEmitterComponent::RePaddingRibbonIndexBuffer()
 	constexpr int meshVertexCount = Particle::GetMeshVertexCount<ParticleType::Ribbon>();;
 	const bool useU16Index = meshVertexCount <= static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()) + 1U;
 	const uint32_t indexTypeSize = useU16Index ? sizeof(uint16_t) : sizeof(uint32_t);
-	const int MAX_VERTEX_COUNT = m_particlePool.GetParticleMaxCount() * meshVertexCount;
-	int indexCountForOneRibbon = 3;
+	const int MAX_VERTEX_COUNT = (m_particlePool.GetParticleMaxCount()-1 )* meshVertexCount;
+	int indexCountForOneRibbon = 6;
 	const uint32_t indicesCount = MAX_VERTEX_COUNT / meshVertexCount * indexCountForOneRibbon;
 	m_ribbonParticleIndexBuffer.resize(indicesCount * indexTypeSize);
 	///
@@ -283,6 +286,9 @@ void ParticleEmitterComponent::RePaddingRibbonIndexBuffer()
 		indexes.push_back(vertexIndex);
 		indexes.push_back(vertexIndex + 1);
 		indexes.push_back(vertexIndex + 2);
+		indexes.push_back(vertexIndex + 2);
+		indexes.push_back(vertexIndex + 1);
+		indexes.push_back(vertexIndex + 3);
 	}
 
 	for (const auto& index : indexes)

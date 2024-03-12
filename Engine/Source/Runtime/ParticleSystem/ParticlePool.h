@@ -23,7 +23,7 @@ public:
 
 	int AllocateParticleIndex();
 	Particle& GetParticle(int index) { return m_particles[index]; }
-	int GetParticleCount() { return m_currentActiveCount; }
+	int GetParticleActiveCount() { return m_currentActiveCount; }
 	int& GetParticleMaxCount() { return m_maxParticleCount; }
 	void SetParticleMaxCount(int count) { m_maxParticleCount = count; }
 
@@ -31,7 +31,7 @@ public:
 	void AllParticlesReset();
 
 private:
-	int m_maxParticleCount = 1;
+	int m_maxParticleCount = 75;
 	int m_currentActiveCount = 0;
 	int m_currentParticleCount = 0;
 	std::vector<Particle> m_particles;
