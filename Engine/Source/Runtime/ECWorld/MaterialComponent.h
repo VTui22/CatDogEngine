@@ -177,22 +177,17 @@ public:
 	void SetToonParameters(ToonParameters toonParameters) { m_toonParameters = toonParameters; }
 	ToonParameters& GetToonParameters() { return m_toonParameters; }
 	ToonParameters GetToonParameters() const { return m_toonParameters; }
+
+	void SetIblStrengeth(float strength) { m_iblStrength = strength; }
+	float& GetIblStrengeth() { return m_iblStrength; }
+	float GetIblStrengeth() const { return m_iblStrength; }
+
 private:
 	// Input
+	std::string m_name;
 	const cd::Material* m_pMaterialData = nullptr;
 	const engine::MaterialType* m_pMaterialType = nullptr;
 
-	std::string m_name;
-
-	cd::Vec3f m_outLineColor = cd::Vec3f::Zero();
-	float m_outLineSize = 0.5f;
-	cd::Vec4f m_rimLight;
-	cd::Vec4f m_dividLine;
-	cd::Vec4f m_specular;
-	cd::Vec3f m_baseColor;
-	cd::Vec3f m_firstShadowColor;
-	cd::Vec3f m_SecondShadowColor;
-	cd::Vec3f m_rimLightColor;
 	bool m_twoSided;
 	bool m_isOpenOutLine;
 	cd::BlendMode m_blendMode;
@@ -202,11 +197,10 @@ private:
 	std::set<ShaderFeature> m_shaderFeatures;
 	std::string m_featureCombine;
 
-	std::vector<TextureBlob> m_cacheTextureBlobs;
-
 	// Output
-	std::map<cd::MaterialTextureType, PropertyGroup> m_propertyGroups;
+	float m_iblStrength = 0.5f;
 	ToonParameters m_toonParameters;
+	std::map<cd::MaterialTextureType, PropertyGroup> m_propertyGroups;
 };
 
 }
