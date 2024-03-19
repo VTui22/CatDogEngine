@@ -93,10 +93,12 @@ public:
 	std::vector<std::byte>& GetSpriteVertexBuffer() { return m_spriteParticleVertexBuffer; }
 	std::vector<std::byte>& GetSpriteIndexBuffer() { return m_spriteParticleIndexBuffer; }
 
-	uint16_t& GetRibbonParticleVertexBufferHandle() { return m_ribbonParticleVertexBufferHandle; }
+	uint16_t& GetRibbonParticlePrePosVertexBufferHandle() { return m_ribbonParticlePrePosVertexBufferHandle; }
+	uint16_t& GetRibbonParticleRemainVertexBufferHandle() { return m_ribbonParticleRemainVertexBufferHandle; }
 	uint16_t& GetRibbonParticleIndexBufferHandle() { return m_ribbonParticleIndexBufferHandle; }
 
-	std::vector<std::byte>& GetRibbonVertexBuffer() { return m_ribbonParticleVertexBuffer; }
+	std::vector<std::byte>& GetRibbonPrePosVertexBuffer() { return m_ribbonParticlePrePosVertexBuffer; }
+	std::vector<std::byte>& GetRibbonRemainVertexBuffer() { return m_ribbonParticleRemainVertexBuffer; }
 	std::vector<std::byte>& GetRibbonIndexBuffer() { return m_ribbonParticleIndexBuffer; }
 
 	uint16_t& GetEmitterShapeVertexBufferHandle() { return m_emitterShapeVertexBufferHandle; }
@@ -118,8 +120,6 @@ public:
 
 	void PaddingRibbonVertexBuffer();
 	void PaddingRibbonIndexBuffer();
-	void RePaddingRibbonVertexBuffer();
-	void RePaddingRibbonIndexBuffer();
 
 	void BuildParticleShape();
 	void RePaddingShapeBuffer();
@@ -137,7 +137,7 @@ private:
 	//ParticleSystem m_particleSystem;
 	ParticlePool m_particlePool;
 
-	engine::ParticleType m_emitterParticleType;
+	engine::ParticleType m_emitterParticleType ;
 
 	//emitter  data
 	int m_spawnCount = 75;
@@ -179,10 +179,13 @@ private:
 	std::vector<std::byte> m_spriteParticleIndexBuffer;
 	uint16_t m_spriteParticleVertexBufferHandle = UINT16_MAX;
 	uint16_t m_spriteParticleIndexBufferHandle = UINT16_MAX;
+
 	//Ribbon
-	std::vector<std::byte> m_ribbonParticleVertexBuffer;
+	std::vector<std::byte> m_ribbonParticlePrePosVertexBuffer;
+	std::vector<std::byte> m_ribbonParticleRemainVertexBuffer;
 	std::vector<std::byte> m_ribbonParticleIndexBuffer;
-	uint16_t m_ribbonParticleVertexBufferHandle = UINT16_MAX;
+	uint16_t m_ribbonParticlePrePosVertexBufferHandle = UINT16_MAX;
+	uint16_t m_ribbonParticleRemainVertexBufferHandle = UINT16_MAX;
 	uint16_t m_ribbonParticleIndexBufferHandle = UINT16_MAX;
 
 

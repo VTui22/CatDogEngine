@@ -10,10 +10,12 @@ namespace engine
 
 void ParticleEmitterComponent::Build()
 {
+	//Sprite
 	BuildParticleShape();
 	bgfx::VertexLayout vertexLayout;
 	VertexLayoutUtility::CreateVertexLayout(vertexLayout, m_pRequiredVertexFormat->GetVertexAttributeLayouts());
 
+	//VertexBuffer IndexBuffer
 	if (m_pMeshData == nullptr)
 	{
 		PaddingSpriteVertexBuffer();
@@ -24,9 +26,6 @@ void ParticleEmitterComponent::Build()
 
 		m_spriteParticleVertexBufferHandle = bgfx::createVertexBuffer(bgfx::makeRef(m_spriteParticleVertexBuffer.data(), static_cast<uint32_t>(m_spriteParticleVertexBuffer.size())), vertexLayout).idx;
 		m_spriteParticleIndexBufferHandle = bgfx::createIndexBuffer(bgfx::makeRef(m_spriteParticleIndexBuffer.data(), static_cast<uint32_t>(m_spriteParticleIndexBuffer.size())), 0U).idx;
-
-		m_ribbonParticleVertexBufferHandle = bgfx::createDynamicVertexBuffer(bgfx::makeRef(m_ribbonParticleVertexBuffer.data(), static_cast<uint32_t>(m_ribbonParticleVertexBuffer.size())), vertexLayout).idx;
-		m_ribbonParticleIndexBufferHandle = bgfx::createDynamicIndexBuffer(bgfx::makeRef(m_ribbonParticleIndexBuffer.data(), static_cast<uint32_t>(m_ribbonParticleIndexBuffer.size())), 0U).idx;	
 	}
 	else
 	{
@@ -130,19 +129,36 @@ void ParticleEmitterComponent::PaddingSpriteIndexBuffer()
 
 void ParticleEmitterComponent::PaddingRibbonVertexBuffer()
 {
-	const bool containsPosition = m_pRequiredVertexFormat->Contains(cd::VertexAttributeType::Position);
-	const bool containsColor = m_pRequiredVertexFormat->Contains(cd::VertexAttributeType::Color);
-	const bool containsUV = m_pRequiredVertexFormat->Contains(cd::VertexAttributeType::UV);
 	//vertexbuffer
 	constexpr int meshVertexCount = Particle::GetMeshVertexCount<ParticleType::Ribbon>();
 	const int MAX_VERTEX_COUNT = m_particlePool.GetParticleMaxCount() * meshVertexCount;
 	size_t vertexCount = MAX_VERTEX_COUNT;
-	const uint32_t vertexFormatStride = m_pRequiredVertexFormat->GetStride();
+	uint32_t csVertexCount = MAX_VERTEX_COUNT;
+	//prePos Vertex format/layout
+	cd::VertexFormat m_pRibbonPrePosVertexFormat;
+	m_pRibbonPrePosVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::Position, cd::GetAttributeValueType<cd::Point::ValueType>(), cd::Point::Size);
+	m_pRibbonPrePosVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::BoneWeight, cd::AttributeValueType::Float, 1U);
+	bgfx::VertexLayout prePosLayout;
+	VertexLayoutUtility::CreateVertexLayout(prePosLayout, m_pRibbonPrePosVertexFormat.GetVertexAttributeLayouts());
+	//remain Vertex format/layout
+	cd::VertexFormat m_pRibbonRemainVertexFormat;
+	m_pRibbonRemainVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::Color, cd::GetAttributeValueType<cd::Color::ValueType>(), cd::Color::Size);
+	m_pRibbonRemainVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::UV, cd::GetAttributeValueType<cd::UV::ValueType>(), cd::UV::Size);
+	bgfx::VertexLayout color_UV_Layout;
+	VertexLayoutUtility::CreateVertexLayout(color_UV_Layout, m_pRibbonRemainVertexFormat.GetVertexAttributeLayouts());
 
-	m_ribbonParticleVertexBuffer.resize(vertexCount * vertexFormatStride);
+	//const uint32_t posVertexFormatStride = m_pRibbonPrePosVertexFormat.GetStride();
+	const uint32_t remainVertexFormatStride = m_pRibbonRemainVertexFormat.GetStride();
 
-	uint32_t currentDataSize = 0U;
-	auto currentDataPtr = m_ribbonParticleVertexBuffer.data();
+	//m_ribbonParticlePrePosVertexBuffer.resize(vertexCount * posVertexFormatStride);
+	m_ribbonParticleRemainVertexBuffer.resize(vertexCount * remainVertexFormatStride);
+
+	//uint32_t currentPosDataSize = 0U;
+	//auto currentPosDataPtr = m_ribbonParticlePrePosVertexBuffer.data();
+	uint32_t currentRemainDataSize = 0U;
+	auto currentRemainDataPtr = m_ribbonParticleRemainVertexBuffer.data();
+	//float placeholder = 0.0f;
+	//uint32_t placeholderSize = sizeof(placeholder);
 
 	std::vector<VertexData> vertexDataBuffer;
 	vertexDataBuffer.resize(MAX_VERTEX_COUNT);
@@ -156,24 +172,20 @@ void ParticleEmitterComponent::PaddingRibbonVertexBuffer()
 
 	for (int i = 0; i < MAX_VERTEX_COUNT; ++i)
 	{
-		if (containsPosition)
-		{
-			std::memcpy(&currentDataPtr[currentDataSize], &vertexDataBuffer[i].pos, sizeof(cd::Point));
-			currentDataSize += sizeof(cd::Point);
-		}
+		//std::memcpy(&currentPosDataPtr[currentPosDataSize], &vertexDataBuffer[i].pos, sizeof(cd::Point));
+		//currentPosDataSize += sizeof(cd::Point);
+		////vec3 filled to vec4 
+		//std::memcpy(&currentPosDataPtr[currentPosDataSize], &placeholder, placeholderSize);
+		//currentPosDataSize += placeholderSize;
 
-		if (containsColor)
-		{
-			std::memcpy(&currentDataPtr[currentDataSize], &vertexDataBuffer[i].color, sizeof(cd::Color));
-			currentDataSize += sizeof(cd::Color);
-		}
-
-		if (containsUV)
-		{
-			std::memcpy(&currentDataPtr[currentDataSize], &vertexDataBuffer[i].uv, sizeof(cd::UV));
-			currentDataSize += sizeof(cd::UV);
-		}
+		std::memcpy(&currentRemainDataPtr[currentRemainDataSize], &vertexDataBuffer[i].color, sizeof(cd::Color));
+		currentRemainDataSize += sizeof(cd::Color);
+		std::memcpy(&currentRemainDataPtr[currentRemainDataSize], &vertexDataBuffer[i].uv, sizeof(cd::UV));
+		currentRemainDataSize += sizeof(cd::UV);
 	}
+	m_ribbonParticlePrePosVertexBufferHandle = bgfx::createDynamicVertexBuffer(csVertexCount, prePosLayout, BGFX_BUFFER_COMPUTE_READ_WRITE).idx;
+	const bgfx::Memory* pRibbonParticleRemainVBRef = bgfx::makeRef(m_ribbonParticleRemainVertexBuffer.data(), static_cast<uint32_t>(m_ribbonParticleRemainVertexBuffer.size()));
+	m_ribbonParticleRemainVertexBufferHandle = bgfx::createVertexBuffer(pRibbonParticleRemainVBRef, color_UV_Layout).idx;
 }
 
 void ParticleEmitterComponent::PaddingRibbonIndexBuffer()
@@ -204,7 +216,6 @@ void ParticleEmitterComponent::PaddingRibbonIndexBuffer()
 		indexes.push_back(vertexIndex + 2);
 		indexes.push_back(vertexIndex + 1);
 		indexes.push_back(vertexIndex + 3);
-
 	}
 
 	for (const auto& index : indexes)
@@ -212,90 +223,7 @@ void ParticleEmitterComponent::PaddingRibbonIndexBuffer()
 		std::memcpy(&currentDataPtr[currentDataSize], &index, indexTypeSize);
 		currentDataSize += static_cast<uint32_t>(indexTypeSize);
 	}
-}
-
-
-void ParticleEmitterComponent::RePaddingRibbonVertexBuffer()
-{
-	const bool containsPosition = m_pRequiredVertexFormat->Contains(cd::VertexAttributeType::Position);
-	const bool containsColor = m_pRequiredVertexFormat->Contains(cd::VertexAttributeType::Color);
-	const bool containsUV = m_pRequiredVertexFormat->Contains(cd::VertexAttributeType::UV);
-	//vertexbuffer
-	constexpr int meshVertexCount = Particle::GetMeshVertexCount<ParticleType::Ribbon>();
-	const int MAX_VERTEX_COUNT = m_particlePool.GetParticleMaxCount() * meshVertexCount;
-	size_t vertexCount = MAX_VERTEX_COUNT;
-	const uint32_t vertexFormatStride = m_pRequiredVertexFormat->GetStride();
-
-	m_ribbonParticleVertexBuffer.resize(vertexCount * vertexFormatStride);
-
-	uint32_t currentDataSize = 0U;
-	auto currentDataPtr = m_ribbonParticleVertexBuffer.data();
-
-	std::vector<VertexData> vertexDataBuffer;
-	vertexDataBuffer.resize(MAX_VERTEX_COUNT);
-	// pos color uv
-	// only a picture now
-	for (int i = 0,index = 0; i < MAX_VERTEX_COUNT; i += meshVertexCount,index++)
-	{
-		vertexDataBuffer[i] = { m_particlePool.GetParticle(index).GetPos()+cd::Vec3f(0.0f,1.0f,0.0f),cd::Vec4f(1.0f,1.0f,1.0f,1.0f),cd::Vec2f(0.5f,0.5f)};
-		vertexDataBuffer[i + 1] = { m_particlePool.GetParticle(index).GetPos()+cd::Vec3f(0.0f,-1.0f,0.0f),cd::Vec4f(1.0f,1.0f,1.0f,1.0f),cd::Vec2f(0.5f,0.5f)};
-	}
-
-	for (int i = 0; i < MAX_VERTEX_COUNT; ++i)
-	{
-		if (containsPosition)
-		{
-			std::memcpy(&currentDataPtr[currentDataSize], &vertexDataBuffer[i].pos, sizeof(cd::Point));
-			currentDataSize += sizeof(cd::Point);
-		}
-
-		if (containsColor)
-		{
-			std::memcpy(&currentDataPtr[currentDataSize], &vertexDataBuffer[i].color, sizeof(cd::Color));
-			currentDataSize += sizeof(cd::Color);
-		}
-
-		if (containsUV)
-		{
-			std::memcpy(&currentDataPtr[currentDataSize], &vertexDataBuffer[i].uv, sizeof(cd::UV));
-			currentDataSize += sizeof(cd::UV);
-		}
-	}
-}
-
-void ParticleEmitterComponent::RePaddingRibbonIndexBuffer()
-{
-	constexpr int meshVertexCount = Particle::GetMeshVertexCount<ParticleType::Ribbon>();;
-	const bool useU16Index = meshVertexCount <= static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()) + 1U;
-	const uint32_t indexTypeSize = useU16Index ? sizeof(uint16_t) : sizeof(uint32_t);
-	const int MAX_VERTEX_COUNT = (m_particlePool.GetParticleMaxCount()-1 )* meshVertexCount;
-	int indexCountForOneRibbon = 6;
-	const uint32_t indicesCount = MAX_VERTEX_COUNT / meshVertexCount * indexCountForOneRibbon;
-	m_ribbonParticleIndexBuffer.resize(indicesCount * indexTypeSize);
-	///
-/*	size_t indexTypeSize = sizeof(uint16_t);
-	m_particleIndexBuffer.resize(m_particleSystem.GetMaxCount() / 4 * 6 * indexTyp
-	eSize);*/
-	uint32_t currentDataSize = 0U;
-	auto currentDataPtr = m_ribbonParticleIndexBuffer.data();
-
-	std::vector<uint16_t> indexes;
-	for (uint16_t i = 0; i < MAX_VERTEX_COUNT; i += meshVertexCount)
-	{
-		uint16_t vertexIndex = static_cast<uint16_t>(i);
-		indexes.push_back(vertexIndex);
-		indexes.push_back(vertexIndex + 1);
-		indexes.push_back(vertexIndex + 2);
-		indexes.push_back(vertexIndex + 2);
-		indexes.push_back(vertexIndex + 1);
-		indexes.push_back(vertexIndex + 3);
-	}
-
-	for (const auto& index : indexes)
-	{
-		std::memcpy(&currentDataPtr[currentDataSize], &index, indexTypeSize);
-		currentDataSize += static_cast<uint32_t>(indexTypeSize);
-	}
+	m_ribbonParticleIndexBufferHandle = bgfx::createIndexBuffer(bgfx::makeRef(m_ribbonParticleIndexBuffer.data(), static_cast<uint32_t>(m_ribbonParticleIndexBuffer.size())), 0U).idx;
 }
 
 void ParticleEmitterComponent::BuildParticleShape()

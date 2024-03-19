@@ -662,7 +662,7 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 
 	if (isOpen)
 	{
-		ImGuiUtils::ImGuiEnumProperty("Render  Mode", pParticleEmitterComponent->GetRenderMode());
+		ImGuiUtils::ImGuiEnumProperty("Render  Mode(Work Type Sprite)", pParticleEmitterComponent->GetRenderMode());
 		ImGuiUtils::ImGuiEnumProperty("Particle Type", pParticleEmitterComponent->GetEmitterParticleType());
 		//ImGuiUtils::ImGuiEnumProperty("Emitter Shape", pParticleEmitterComponent->GetEmitterShape());
 		ImGuiUtils::ImGuiVectorProperty("Emitter Range", pParticleEmitterComponent->GetEmitterShapeRange());
@@ -674,7 +674,7 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 		ImGuiUtils::ImGuiVectorProperty("Acceleration", pParticleEmitterComponent->GetEmitterAcceleration());
 		ImGuiUtils::ColorPickerProperty("Color", pParticleEmitterComponent->GetEmitterColor());
 		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime(),cd::Unit::None, 0, 6);
-		if (ImGuiUtils::ImGuiBoolProperty("Instance State", pParticleEmitterComponent->GetInstanceState()))
+		if (ImGuiUtils::ImGuiBoolProperty("Instance State(Work Type Sprite)", pParticleEmitterComponent->GetInstanceState()))
 		{
 			pParticleEmitterComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 		}

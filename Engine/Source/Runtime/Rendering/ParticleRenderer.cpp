@@ -1,10 +1,11 @@
-#include "Log/Log.h"
 #include "ParticleRenderer.h"
+
 #include "ECWorld/CameraComponent.h"
 #include "ECWorld/SceneWorld.h"
 #include "ECWorld/ParticleForceFieldComponent.h"
 #include "ECWorld/TransformComponent.h"
 #include "Rendering/RenderContext.h"
+#include "../UniformDefines/U_Particle.sh"
 
 namespace engine {
 
@@ -14,6 +15,8 @@ constexpr const char* particlePos = "u_particlePos";
 constexpr const char* particleScale = "u_particleScale";
 constexpr const char* shapeRange = "u_shapeRange";
 constexpr const char* particleColor = "u_particleColor";
+constexpr const char* ribbonCount = "u_ribbonCount";
+constexpr const char* ribbonMaxPos = "u_ribbonMaxPos";
 
 uint64_t state_tristrip = BGFX_STATE_WRITE_MASK | BGFX_STATE_MSAA | BGFX_STATE_DEPTH_TEST_LESS |
 BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA) | BGFX_STATE_PT_TRISTRIP;
@@ -21,18 +24,25 @@ BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA
 uint64_t state_lines = BGFX_STATE_WRITE_MASK | BGFX_STATE_MSAA | BGFX_STATE_DEPTH_TEST_LESS |
 BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA) | BGFX_STATE_PT_LINES;
 
-constexpr const char* ParticleProgram = "ParticleProgram";
+constexpr const char* SpriteParticleProgram = "SpriteParticleProgram";
+constexpr const char* RibbonParticleCsProgram = "RibbonParticleCsProgram";
+constexpr const char* RibbonParticleProgram = "RibbonParticleProgram";
 constexpr const char* ParticleEmitterShapeProgram = "ParticleEmitterShapeProgram";
 constexpr const char* WO_BillboardParticleProgram = "WO_BillboardParticleProgram";
 
-constexpr StringCrc ParticleProgramCrc = StringCrc{ "ParticleProgram" };
+constexpr StringCrc SpriteParticleProgramCrc = StringCrc{ "SpriteParticleProgram" };
+constexpr StringCrc RibbonParticleProgramCsCrc = StringCrc{ "RibbonParticleCsProgram" };
+constexpr StringCrc RibbonParticleProgramCrc = StringCrc{ "RibbonParticleProgram" };
+
 constexpr StringCrc ParticleEmitterShapeProgramCrc = StringCrc{ "ParticleEmitterShapeProgram" };
 constexpr StringCrc WO_BillboardParticleProgramCrc = StringCrc{ "WO_BillboardParticleProgram" };
 }
 
 void ParticleRenderer::Init()
 {
-	GetRenderContext()->RegisterShaderProgram(ParticleProgramCrc, { "vs_particle", "fs_particle" });
+	GetRenderContext()->RegisterShaderProgram(SpriteParticleProgramCrc, { "vs_particleSprite", "fs_particleSprite" });
+	GetRenderContext()->RegisterShaderProgram(RibbonParticleProgramCsCrc, { "cs_particleRibbon" });
+	GetRenderContext()->RegisterShaderProgram(RibbonParticleProgramCrc, { "vs_particleRibbon", "fs_particleRibbon" });
 	GetRenderContext()->RegisterShaderProgram(ParticleEmitterShapeProgramCrc, {"vs_particleEmitterShape", "fs_particleEmitterShape"});
 	GetRenderContext()->RegisterShaderProgram(WO_BillboardParticleProgramCrc, { "vs_wo_billboardparticle","fs_wo_billboardparticle" });
 
@@ -42,14 +52,21 @@ void ParticleRenderer::Init()
 void ParticleRenderer::Warmup()
 {
 	constexpr const char* particleTexture = "Textures/textures/Particle.png";
-	m_particleTextureHandle = GetRenderContext()->CreateTexture(particleTexture);
+	m_particleSpriteTextureHandle = GetRenderContext()->CreateTexture(particleTexture);
+	m_particleRibbonTextureHandle = GetRenderContext()->CreateTexture(particleTexture);
+
 	GetRenderContext()->CreateUniform("s_texColor", bgfx::UniformType::Sampler);
+	GetRenderContext()->CreateUniform("r_texColor", bgfx::UniformType::Sampler);
 	GetRenderContext()->CreateUniform(particlePos, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(particleScale, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(shapeRange, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(particleColor, bgfx::UniformType::Vec4, 1);
+	GetRenderContext()->CreateUniform(ribbonCount, bgfx::UniformType::Vec4, 1);
+	GetRenderContext()->CreateUniform(ribbonMaxPos, bgfx::UniformType::Vec4, 75);
 
-	GetRenderContext()->UploadShaderProgram(ParticleProgram);
+	GetRenderContext()->UploadShaderProgram(SpriteParticleProgram);
+	GetRenderContext()->UploadShaderProgram(RibbonParticleCsProgram);
+	GetRenderContext()->UploadShaderProgram(RibbonParticleProgram);
 	GetRenderContext()->UploadShaderProgram(ParticleEmitterShapeProgram);
 	GetRenderContext()->UploadShaderProgram(WO_BillboardParticleProgram);
 }
@@ -97,22 +114,8 @@ void ParticleRenderer::Render(float deltaTime)
 		if (particleIndex != -1)
 		{
 			Particle& particle = pEmitterComponent->GetParticlePool().GetParticle(particleIndex);
-			if (pEmitterComponent->GetRandomPosState())
-			{
-				particle.SetPos(particleTransform.GetTranslation()+ pEmitterComponent->GetRandormPos());
-			}
-			else
-			{
-				particle.SetPos(particleTransform.GetTranslation());
-			}
-			if (pEmitterComponent->GetRandomVelocityState())
-			{
-				particle.SetSpeed(pEmitterComponent->GetEmitterVelocity()+ randomVelocity);
-			}
-			else
-			{
-				particle.SetSpeed(pEmitterComponent->GetEmitterVelocity());
-			}
+			SetRandomPosState(particle, particleTransform.GetTranslation(), randomPos, pEmitterComponent->GetRandomPosState());
+			SetRandomVelocityState(particle, pEmitterComponent->GetEmitterVelocity(), randomVelocity, pEmitterComponent->GetRandomVelocityState());
 			particle.SetRotationForceField(m_forcefieldRotationFoce);
 			particle.SetRotationForceFieldRange(m_forcefieldRange);
 			particle.SetAcceleration(pEmitterComponent->GetEmitterAcceleration());
@@ -158,7 +161,7 @@ void ParticleRenderer::Render(float deltaTime)
 			bgfx::setUniform(GetRenderContext()->GetUniform(ParticleScaleCrc), &particleTransform.GetScale(), 1);
 
 			constexpr StringCrc ParticleSampler("s_texColor");
-			bgfx::setTexture(0, GetRenderContext()->GetUniform(ParticleSampler), m_particleTextureHandle);
+			bgfx::setTexture(0, GetRenderContext()->GetUniform(ParticleSampler), m_particleSpriteTextureHandle);
 			if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Sprite)
 			{
 				bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetSpriteParticleVertexBufferHandle() });
@@ -166,21 +169,15 @@ void ParticleRenderer::Render(float deltaTime)
 			}
 			else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
 			{
-				bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
+				bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticlePrePosVertexBufferHandle() });
+				bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleRemainVertexBufferHandle() });
 				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
 			}
 
 			bgfx::setState(state_tristrip);
 			bgfx::setInstanceDataBuffer(&idb);
 
-			if (pEmitterComponent->GetRenderMode() == engine::ParticleRenderMode::Mesh)
-			{
-				GetRenderContext()->Submit(GetViewID(), ParticleProgram);
-			}
-			else if (pEmitterComponent->GetRenderMode() == engine::ParticleRenderMode::Billboard)
-			{
-				GetRenderContext()->Submit(GetViewID(), WO_BillboardParticleProgram);
-			}
+			SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType());
 		}
 		else
 		{
@@ -210,46 +207,107 @@ void ParticleRenderer::Render(float deltaTime)
 						pEmitterComponent->GetParticlePool().GetParticle(ii).GetPos().x(), pEmitterComponent->GetParticlePool().GetParticle(ii).GetPos().y(), pEmitterComponent->GetParticlePool().GetParticle(ii).GetPos().z());
 				}
 				bgfx::setTransform(mtx);
-				constexpr StringCrc ParticleSampler("s_texColor");
-				bgfx::setTexture(0, GetRenderContext()->GetUniform(ParticleSampler), m_particleTextureHandle);
 				bgfx::setState(state_tristrip);
 				if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Sprite)
 				{
+					constexpr StringCrc spriteParticleSampler("s_texColor");
+					bgfx::setTexture(0, GetRenderContext()->GetUniform(spriteParticleSampler), m_particleSpriteTextureHandle);
 					bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetSpriteParticleVertexBufferHandle() });
 					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetSpriteParticleIndexBufferHandle() });
 				}
 				else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
 				{
-					//bgfx::setState(state_lines);
-					pEmitterComponent->RePaddingRibbonVertexBuffer();
-					pEmitterComponent->RePaddingRibbonIndexBuffer();
-					const bgfx::Memory* pParticleVertexBuffer = bgfx::makeRef(pEmitterComponent->GetRibbonVertexBuffer().data(), static_cast<uint32_t>(pEmitterComponent->GetRibbonVertexBuffer().size()));
-					const bgfx::Memory* pParticleIndexBuffer = bgfx::makeRef(pEmitterComponent->GetRibbonIndexBuffer().data(), static_cast<uint32_t>(pEmitterComponent->GetRibbonIndexBuffer().size()));
-					bgfx::update(bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle()}, 0, pParticleVertexBuffer);
-					bgfx::update(bgfx::DynamicIndexBufferHandle{pEmitterComponent->GetRibbonParticleIndexBufferHandle()}, 0, pParticleIndexBuffer);
-					bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticleVertexBufferHandle() });
-					bgfx::setIndexBuffer(bgfx::DynamicIndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
-				}
+					constexpr StringCrc ribbonParticleSampler("r_texColor");
+					bgfx::setTexture(1, GetRenderContext()->GetUniform(ribbonParticleSampler), m_particleRibbonTextureHandle);
+					bgfx::setBuffer(PT_RIBBON_VERTEX_STAGE, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticlePrePosVertexBufferHandle() }, bgfx::Access::ReadWrite);
 
-				if (pEmitterComponent->GetRenderMode() == engine::ParticleRenderMode::Mesh)
-				{
-					GetRenderContext()->Submit(GetViewID(), ParticleProgram);
+					//ribbonCount Uinform
+					constexpr StringCrc ribbontCounts(ribbonCount);
+					cd::Vec4f allRibbonCount{ static_cast<float>(pEmitterComponent->GetParticlePool().GetParticleMaxCount()* Particle::GetMeshVertexCount<ParticleType::Ribbon>()),
+						pEmitterComponent->GetParticlePool().GetParticleMaxCount(),
+						0,
+						0};
+					GetRenderContext()->FillUniform(ribbontCounts, &allRibbonCount, 1);
+
+					//ribbonListUniform
+					cd::Vec4f ribbonPosList[75]{};
+					for (int i = 0; i < 75; i++)
+					{
+						ribbonPosList[i] =cd::Vec4f(pEmitterComponent->GetParticlePool().GetParticle(i).GetPos().x(),
+							pEmitterComponent->GetParticlePool().GetParticle(i).GetPos().y(),
+							pEmitterComponent->GetParticlePool().GetParticle(i).GetPos().z()
+							, 0.0f);
+					}
+					constexpr StringCrc maxPosList(ribbonMaxPos);
+					GetRenderContext()->FillUniform(maxPosList, &ribbonPosList, 75);
+					GetRenderContext()->Dispatch(GetViewID(), RibbonParticleCsProgram, 1U, 1U, 1U);
+					//pEmitterComponent->UpdateRibbonPosBuffer();
+
+					bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticlePrePosVertexBufferHandle() });
+					bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleRemainVertexBufferHandle() });
+					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
 				}
-				else if (pEmitterComponent->GetRenderMode() == engine::ParticleRenderMode::Billboard)
-				{
-					GetRenderContext()->Submit(GetViewID(), WO_BillboardParticleProgram);
-				}
+				SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType());
 			}
 		}
 
 		constexpr StringCrc emitShapeRangeCrc(shapeRange);
 		bgfx::setUniform(GetRenderContext()->GetUniform(emitShapeRangeCrc), &pEmitterComponent->GetEmitterShapeRange(), 1);
 		bgfx::setTransform(m_pCurrentSceneWorld->GetTransformComponent(entity)->GetWorldMatrix().begin());
-		bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pEmitterComponent->GetEmitterShapeVertexBufferHandle() });
+		bgfx::setVertexBuffer(0, bgfx::VertexBufferHandle{ pEmitterComponent->GetEmitterShapeVertexBufferHandle() });
 		bgfx::setIndexBuffer(bgfx::IndexBufferHandle{ pEmitterComponent->GetEmitterShapeIndexBufferHandle() });
 		bgfx::setState(state_lines);
 
 		GetRenderContext()->Submit(GetViewID(), ParticleEmitterShapeProgram);
+	}
+}
+
+void ParticleRenderer::SetRenderMode(engine::ParticleRenderMode& rendermode, engine::ParticleType type)
+{
+	if (rendermode == engine::ParticleRenderMode::Mesh)
+	{
+		if (type == engine::ParticleType::Sprite)
+		{
+			GetRenderContext()->Submit(GetViewID(), SpriteParticleProgram);
+		}
+		else if (type == engine::ParticleType::Ribbon)
+		{
+			GetRenderContext()->Submit(GetViewID(), RibbonParticleProgram);
+		}
+	}
+	else if (rendermode == engine::ParticleRenderMode::Billboard)
+	{
+		if (type == engine::ParticleType::Sprite)
+		{
+			GetRenderContext()->Submit(GetViewID(), WO_BillboardParticleProgram);
+		}
+		else if (type == engine::ParticleType::Ribbon)
+		{
+			//GetRenderContext()->Submit(GetViewID(), WO_BillboardParticleProgram);
+		}
+	}
+}
+
+void ParticleRenderer::SetRandomPosState(engine::Particle& particle, cd::Vec3f value, cd::Vec3f randomvalue, bool state)
+{
+	if (state)
+	{
+		particle.SetPos(value + randomvalue);
+	}
+	else
+	{
+		particle.SetPos(value);
+	}
+}
+void ParticleRenderer::SetRandomVelocityState(engine::Particle& particle, cd::Vec3f value, cd::Vec3f randomvalue, bool state)
+{
+	if (state)
+	{
+		particle.SetSpeed(value + randomvalue);
+	}
+	else
+	{
+		particle.SetSpeed(value);
 	}
 }
 
