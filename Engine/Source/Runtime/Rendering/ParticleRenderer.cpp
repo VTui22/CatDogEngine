@@ -24,13 +24,12 @@ BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA
 uint64_t state_lines = BGFX_STATE_WRITE_MASK | BGFX_STATE_MSAA | BGFX_STATE_DEPTH_TEST_LESS |
 BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA) | BGFX_STATE_PT_LINES;
 
-constexpr const char* SpriteParticleProgram = "SpriteParticleProgram";
+//Sprite Particle in EditorApp.cpp
 constexpr const char* RibbonParticleCsProgram = "RibbonParticleCsProgram";
 constexpr const char* RibbonParticleProgram = "RibbonParticleProgram";
 constexpr const char* ParticleEmitterShapeProgram = "ParticleEmitterShapeProgram";
 constexpr const char* WO_BillboardParticleProgram = "WO_BillboardParticleProgram";
 
-constexpr StringCrc SpriteParticleProgramCrc = StringCrc{ "SpriteParticleProgram" };
 constexpr StringCrc RibbonParticleProgramCsCrc = StringCrc{ "RibbonParticleCsProgram" };
 constexpr StringCrc RibbonParticleProgramCrc = StringCrc{ "RibbonParticleProgram" };
 
@@ -40,7 +39,6 @@ constexpr StringCrc WO_BillboardParticleProgramCrc = StringCrc{ "WO_BillboardPar
 
 void ParticleRenderer::Init()
 {
-	GetRenderContext()->RegisterShaderProgram(SpriteParticleProgramCrc, { "vs_particleSprite", "fs_particleSprite" });
 	GetRenderContext()->RegisterShaderProgram(RibbonParticleProgramCsCrc, { "cs_particleRibbon" });
 	GetRenderContext()->RegisterShaderProgram(RibbonParticleProgramCrc, { "vs_particleRibbon", "fs_particleRibbon" });
 	GetRenderContext()->RegisterShaderProgram(ParticleEmitterShapeProgramCrc, {"vs_particleEmitterShape", "fs_particleEmitterShape"});
@@ -65,7 +63,7 @@ void ParticleRenderer::Warmup()
 	GetRenderContext()->CreateUniform(ribbonCount, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(ribbonMaxPos, bgfx::UniformType::Vec4, 75);
 
-	GetRenderContext()->UploadShaderProgram(SpriteParticleProgram);
+	//GetRenderContext()->UploadShaderProgram(SpriteParticleProgram);
 	GetRenderContext()->UploadShaderProgram(RibbonParticleCsProgram);
 	GetRenderContext()->UploadShaderProgram(RibbonParticleProgram);
 	GetRenderContext()->UploadShaderProgram(ParticleEmitterShapeProgram);
@@ -94,7 +92,8 @@ void ParticleRenderer::Render(float deltaTime)
 		const cd::Transform& particleTransform = m_pCurrentSceneWorld->GetTransformComponent(entity)->GetTransform();
 		const cd::Quaternion& particleRotation = m_pCurrentSceneWorld->GetTransformComponent(entity)->GetTransform().GetRotation();
 		ParticleEmitterComponent* pEmitterComponent = m_pCurrentSceneWorld->GetParticleEmitterComponent(entity);
-		
+		MaterialComponent* pParticleMaterialComponet = m_pCurrentSceneWorld->GetMaterialComponent(entity);
+
 		const cd::Transform& pMainCameraTransform = m_pCurrentSceneWorld->GetTransformComponent(pMainCameraEntity)->GetTransform();
 		//const cd::Quaternion& cameraRotation = pMainCameraTransform.GetRotation();
 		//Not include particle attribute
@@ -180,7 +179,7 @@ void ParticleRenderer::Render(float deltaTime)
 			bgfx::setState(state_tristrip);
 			bgfx::setInstanceDataBuffer(&idb);
 
-			SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType());
+			SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType(), pParticleMaterialComponet);
 		}
 		else
 		{
@@ -249,7 +248,7 @@ void ParticleRenderer::Render(float deltaTime)
 					bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleRemainVertexBufferHandle() });
 					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
 				}
-				SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType());
+				SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType(),pParticleMaterialComponet);
 			}
 		}
 
@@ -264,13 +263,13 @@ void ParticleRenderer::Render(float deltaTime)
 	}
 }
 
-void ParticleRenderer::SetRenderMode(engine::ParticleRenderMode& rendermode, engine::ParticleType type)
+void ParticleRenderer::SetRenderMode(engine::ParticleRenderMode& rendermode, engine::ParticleType type, engine::MaterialComponent* shaderFeature_MaterialCompoent)
 {
 	if (rendermode == engine::ParticleRenderMode::Mesh)
 	{
 		if (type == engine::ParticleType::Sprite)
 		{
-			GetRenderContext()->Submit(GetViewID(), SpriteParticleProgram);
+			GetRenderContext()->Submit(GetViewID(), shaderFeature_MaterialCompoent->GetShaderProgramName(), shaderFeature_MaterialCompoent->GetFeaturesCombine());
 		}
 		else if (type == engine::ParticleType::Ribbon)
 		{

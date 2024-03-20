@@ -651,6 +651,7 @@ template<>
 void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld* pSceneWorld, engine::Entity entity)
 {
 	auto* pParticleEmitterComponent = pSceneWorld->GetParticleEmitterComponent(entity);
+	auto* pParticleMaterialComponent = pSceneWorld->GetMaterialComponent(entity);
 	if (!pParticleEmitterComponent)
 	{
 		return;
@@ -676,11 +677,11 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime(),cd::Unit::None, 0, 6);
 		if (ImGuiUtils::ImGuiBoolProperty("Instance State(Work Type Sprite)", pParticleEmitterComponent->GetInstanceState()))
 		{
-			pParticleEmitterComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
+			pParticleMaterialComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 		}
 		else
 		{
-			pParticleEmitterComponent->DeactivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
+			pParticleMaterialComponent->DeactivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 		}
 	}
 

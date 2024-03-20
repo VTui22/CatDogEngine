@@ -28,7 +28,7 @@ public:
 	void SetForceFieldRotationForce(ParticleForceFieldComponent* forcefield) { m_forcefieldRotationFoce = forcefield->GetRotationForce(); }
 	void SetForceFieldRange(ParticleForceFieldComponent* forcefield ,cd::Vec3f scale) { m_forcefieldRange = forcefield->GetForceFieldRange()*scale; }
 
-	void SetRenderMode(engine::ParticleRenderMode& rendermode, engine::ParticleType type);
+	void SetRenderMode(engine::ParticleRenderMode& rendermode, engine::ParticleType type, engine::MaterialComponent* materialcomponent);
 	void SetRandomPosState(engine::Particle& particle, cd::Vec3f value, cd::Vec3f randomvalue, bool state);
 	void SetRandomVelocityState(engine::Particle& particle, cd::Vec3f value, cd::Vec3f randomvalue, bool state);
 private:

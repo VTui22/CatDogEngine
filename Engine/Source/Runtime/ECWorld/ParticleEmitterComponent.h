@@ -56,9 +56,6 @@ public:
 	bool& GetInstanceState() { return m_useInstance; }
 	void SetInstanceState(bool state) { m_useInstance = state; }
 
-	const engine::MaterialType* GetMaterialType() const { return m_pParticleMaterialType; }
-	void SetMaterialType(const engine::MaterialType* pMaterialType) { m_pParticleMaterialType = pMaterialType; }
-
 	ParticleRenderMode& GetRenderMode() { return m_renderMode; }
 	void SetRenderMode(engine::ParticleRenderMode mode) { m_renderMode = mode; }
 
@@ -124,15 +121,6 @@ public:
 	void BuildParticleShape();
 	void RePaddingShapeBuffer();
 
-	// Uber shader data.
-	const std::string& GetShaderProgramName() const;
-	void ActivateShaderFeature(ShaderFeature feature);
-	void DeactivateShaderFeature(ShaderFeature feature);
-	void SetShaderFeatures(std::set<ShaderFeature> options) { m_shaderFeatures = cd::MoveTemp(m_shaderFeatures); }
-	std::set<ShaderFeature>& GetShaderFeatures() { return m_shaderFeatures; }
-	const std::set<ShaderFeature>& GetShaderFeatures() const { return m_shaderFeatures; }
-	const std::string& GetFeaturesCombine();
-
 private:
 	//ParticleSystem m_particleSystem;
 	ParticlePool m_particlePool;
@@ -154,12 +142,6 @@ private:
 
 	//instancing
 	bool m_useInstance = false;
-
-	//Uber shader
-	const engine::MaterialType* m_pParticleMaterialType = nullptr;
-	bool m_isShaderFeatureDirty = false;
-	std::set<ShaderFeature> m_shaderFeatures;
-	std::string m_featureCombine;
 
 	//render mode  mesh/billboard/ribbon
 	ParticleRenderMode m_renderMode = ParticleRenderMode::Mesh;
