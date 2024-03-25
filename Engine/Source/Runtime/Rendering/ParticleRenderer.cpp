@@ -1,16 +1,19 @@
 #include "ParticleRenderer.h"
 
 #include "ECWorld/CameraComponent.h"
-#include "ECWorld/SceneWorld.h"
 #include "ECWorld/ParticleForceFieldComponent.h"
+#include "ECWorld/SceneWorld.h"
 #include "ECWorld/TransformComponent.h"
+#include "Log/Log.h"
 #include "Rendering/RenderContext.h"
 #include "../UniformDefines/U_Particle.sh"
 
-namespace engine {
+namespace engine
+{
 
 namespace
 {
+
 constexpr const char* particlePos = "u_particlePos";
 constexpr const char* particleScale = "u_particleScale";
 constexpr const char* shapeRange = "u_shapeRange";
@@ -44,11 +47,6 @@ void ParticleRenderer::Init()
 	GetRenderContext()->RegisterShaderProgram(ParticleEmitterShapeProgramCrc, {"vs_particleEmitterShape", "fs_particleEmitterShape"});
 	GetRenderContext()->RegisterShaderProgram(WO_BillboardParticleProgramCrc, { "vs_wo_billboardparticle","fs_wo_billboardparticle" });
 
-	bgfx::setViewName(GetViewID(), "ParticleRenderer");
-}
-
-void ParticleRenderer::Warmup()
-{
 	constexpr const char* particleTexture = "Textures/textures/Particle.png";
 	constexpr const char* ribbonTexture = "Textures/textures/Particle.png";
 	m_particleSpriteTextureHandle = GetRenderContext()->CreateTexture(particleTexture);
@@ -78,6 +76,15 @@ void ParticleRenderer::UpdateView(const float* pViewMatrix, const float* pProjec
 
 void ParticleRenderer::Render(float deltaTime)
 {
+	for (const auto pResource : m_dependentShaderResources)
+	{
+		if (ResourceStatus::Ready != pResource->GetStatus() &&
+			ResourceStatus::Optimized != pResource->GetStatus())
+		{
+			return;
+		}
+	}
+
 	for (Entity entity : m_pCurrentSceneWorld->GetParticleForceFieldEntities())
 	{
 		ParticleForceFieldComponent* pForceFieldComponent = m_pCurrentSceneWorld->GetParticleForceFieldComponent(entity);
@@ -259,7 +266,8 @@ void ParticleRenderer::Render(float deltaTime)
 		bgfx::setIndexBuffer(bgfx::IndexBufferHandle{ pEmitterComponent->GetEmitterShapeIndexBufferHandle() });
 		bgfx::setState(state_lines);
 
-		GetRenderContext()->Submit(GetViewID(), ParticleEmitterShapeProgram);
+		constexpr StringCrc programHandleIndex{ "ParticleEmitterShapeProgram" };
+		GetRenderContext()->Submit(GetViewID(), programHandleIndex);
 	}
 }
 
