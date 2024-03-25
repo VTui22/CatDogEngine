@@ -431,7 +431,7 @@ void ECWorldConsumer::AddParticleEmitter(engine::Entity entity, const cd::Mesh& 
 	particleEmitterComponent.SetEmitterAcceleration(emitter.GetAccelerate());
 	particleEmitterComponent.SetMeshData(&mesh); 
 	particleMaterialComponent.SetMaterialType(pMaterialType);
-	particleMaterialComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
+	//particleMaterialComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 	particleEmitterComponent.Build();
 }
 

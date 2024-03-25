@@ -679,12 +679,11 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 		ImGuiUtils::ImGuiVectorProperty("Acceleration", pParticleEmitterComponent->GetEmitterAcceleration());
 		ImGuiUtils::ColorPickerProperty("Color", pParticleEmitterComponent->GetEmitterColor());
 		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime(),cd::Unit::None, 0, 6);
-		if (ImGuiUtils::ImGuiBoolProperty("Instance State(Work Type Sprite)", pParticleEmitterComponent->GetInstanceState()))
+		bool featureChanged = ImGuiUtils::ImGuiBoolProperty("Instance State(Work Type Sprite)", pParticleEmitterComponent->GetInstanceState());
+		if (featureChanged)
 		{
-			pParticleMaterialComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
-		}
-		else
-		{
+			pParticleEmitterComponent->GetInstanceState() ?
+			  pParticleMaterialComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE) :
 			pParticleMaterialComponent->DeactivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 		}
 	}

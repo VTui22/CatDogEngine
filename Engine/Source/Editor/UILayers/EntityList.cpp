@@ -269,12 +269,8 @@ void EntityList::AddEntity(engine::SceneWorld* pSceneWorld)
         particleEmitterComponent.SetRequiredVertexFormat(&pParticleMaterialType->GetRequiredVertexFormat());//to do : modify vertexFormat
         particleMaterialComponent.Init();
         particleMaterialComponent.SetMaterialType(pParticleMaterialType);
-        particleMaterialComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
-        //particleEmitterComponent.SetMaterialType(pParticleMaterialType);
-        //particleEmitterComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
+        //particleMaterialComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
         particleEmitterComponent.Build();
-        //auto& particleForceFieldComponent = pWorld->CreateComponent<engine::ParticleForceFieldComponent>(entity);
-        //particleForceFieldComponent.Build();
     }
     else if (ImGui::MenuItem("Add Particle ForceField"))
     {
