@@ -125,7 +125,7 @@ private:
 	//ParticleSystem m_particleSystem;
 	ParticlePool m_particlePool;
 
-	engine::ParticleType m_emitterParticleType ;
+	engine::ParticleType m_emitterParticleType = engine::ParticleType::Sprite;
 
 	//emitter  data
 	int m_spawnCount = 75;

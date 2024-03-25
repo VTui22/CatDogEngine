@@ -262,7 +262,7 @@ void EditorApp::InitMaterialType()
 	m_pRenderContext->RegisterShaderProgram("WorldProgram", "vs_PBR", "fs_PBR");
 	m_pRenderContext->RegisterShaderProgram("AnimationProgram", "vs_animation", "fs_animation");
 	m_pRenderContext->RegisterShaderProgram("TerrainProgram", "vs_terrain", "fs_terrain");
-	m_pRenderContext->RegisterShaderProgram("ParticleProgram", "vs_particle", "fs_particle");
+	m_pRenderContext->RegisterShaderProgram("ParticleProgram", "vs_particleSprite", "fs_particleSprite");
 	m_pRenderContext->RegisterShaderProgram("CelluloidProgram", "vs_celluloid", "fs_celluloid");
 
 	m_pSceneWorld = std::make_unique<engine::SceneWorld>();

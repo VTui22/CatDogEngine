@@ -6,6 +6,7 @@
 #include "ECWorld/TransformComponent.h"
 #include "Log/Log.h"
 #include "Rendering/RenderContext.h"
+#include "Rendering/Resources/ShaderResource.h"
 #include "../UniformDefines/U_Particle.sh"
 
 namespace engine
@@ -33,19 +34,19 @@ constexpr const char* RibbonParticleProgram = "RibbonParticleProgram";
 constexpr const char* ParticleEmitterShapeProgram = "ParticleEmitterShapeProgram";
 constexpr const char* WO_BillboardParticleProgram = "WO_BillboardParticleProgram";
 
-constexpr StringCrc RibbonParticleProgramCsCrc = StringCrc{ "RibbonParticleCsProgram" };
-constexpr StringCrc RibbonParticleProgramCrc = StringCrc{ "RibbonParticleProgram" };
+constexpr StringCrc RibbonParticleProgramCsCrc = StringCrc{ RibbonParticleCsProgram };
+constexpr StringCrc RibbonParticleProgramCrc = StringCrc{ RibbonParticleProgram };
 
-constexpr StringCrc ParticleEmitterShapeProgramCrc = StringCrc{ "ParticleEmitterShapeProgram" };
-constexpr StringCrc WO_BillboardParticleProgramCrc = StringCrc{ "WO_BillboardParticleProgram" };
+constexpr StringCrc ParticleEmitterShapeProgramCrc = StringCrc{ ParticleEmitterShapeProgram };
+constexpr StringCrc WO_BillboardParticleProgramCrc = StringCrc{ WO_BillboardParticleProgram };
 }
 
 void ParticleRenderer::Init()
 {
-	GetRenderContext()->RegisterShaderProgram(RibbonParticleProgramCsCrc, { "cs_particleRibbon" });
-	GetRenderContext()->RegisterShaderProgram(RibbonParticleProgramCrc, { "vs_particleRibbon", "fs_particleRibbon" });
-	GetRenderContext()->RegisterShaderProgram(ParticleEmitterShapeProgramCrc, {"vs_particleEmitterShape", "fs_particleEmitterShape"});
-	GetRenderContext()->RegisterShaderProgram(WO_BillboardParticleProgramCrc, { "vs_wo_billboardparticle","fs_wo_billboardparticle" });
+	AddDependentShaderResource(GetRenderContext()->RegisterShaderProgram(RibbonParticleCsProgram, "cs_particleRibbon", ShaderProgramType::Compute));
+	AddDependentShaderResource(GetRenderContext()->RegisterShaderProgram(RibbonParticleProgram, "vs_particleRibbon", "fs_particleRibbon"));
+	AddDependentShaderResource(GetRenderContext()->RegisterShaderProgram(ParticleEmitterShapeProgram, "vs_particleEmitterShape", "fs_particleEmitterShape"));
+	AddDependentShaderResource(GetRenderContext()->RegisterShaderProgram(WO_BillboardParticleProgram, "vs_wo_billboardparticle", "fs_wo_billboardparticle"));
 
 	constexpr const char* particleTexture = "Textures/textures/Particle.png";
 	constexpr const char* ribbonTexture = "Textures/textures/Particle.png";
@@ -61,11 +62,7 @@ void ParticleRenderer::Init()
 	GetRenderContext()->CreateUniform(ribbonCount, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(ribbonMaxPos, bgfx::UniformType::Vec4, 75);
 
-	//GetRenderContext()->UploadShaderProgram(SpriteParticleProgram);
-	GetRenderContext()->UploadShaderProgram(RibbonParticleCsProgram);
-	GetRenderContext()->UploadShaderProgram(RibbonParticleProgram);
-	GetRenderContext()->UploadShaderProgram(ParticleEmitterShapeProgram);
-	GetRenderContext()->UploadShaderProgram(WO_BillboardParticleProgram);
+	bgfx::setViewName(GetViewID(), "ParticleRenderer");
 }
 
 void ParticleRenderer::UpdateView(const float* pViewMatrix, const float* pProjectionMatrix)
@@ -100,6 +97,13 @@ void ParticleRenderer::Render(float deltaTime)
 		const cd::Quaternion& particleRotation = m_pCurrentSceneWorld->GetTransformComponent(entity)->GetTransform().GetRotation();
 		ParticleEmitterComponent* pEmitterComponent = m_pCurrentSceneWorld->GetParticleEmitterComponent(entity);
 		MaterialComponent* pParticleMaterialComponet = m_pCurrentSceneWorld->GetMaterialComponent(entity);
+		//NOTE: This ShaderResource Not Used Just For Judge
+		const ShaderResource* pShaderResource = pParticleMaterialComponet->GetShaderResource();
+		if (ResourceStatus::Ready != pShaderResource->GetStatus() &&
+			ResourceStatus::Optimized != pShaderResource->GetStatus())
+		{
+			continue;
+		}
 
 		const cd::Transform& pMainCameraTransform = m_pCurrentSceneWorld->GetTransformComponent(pMainCameraEntity)->GetTransform();
 		//const cd::Quaternion& cameraRotation = pMainCameraTransform.GetRotation();
@@ -247,7 +251,7 @@ void ParticleRenderer::Render(float deltaTime)
 					}
 					constexpr StringCrc maxPosList(ribbonMaxPos);
 					GetRenderContext()->FillUniform(maxPosList, &ribbonPosList, 75);
-					GetRenderContext()->Dispatch(GetViewID(), RibbonParticleCsProgram, 1U, 1U, 1U);
+					GetRenderContext()->Dispatch(GetViewID(), RibbonParticleProgramCsCrc, 1U, 1U, 1U);
 					//pEmitterComponent->UpdateRibbonPosBuffer();
 					constexpr StringCrc ribbonParticleSampler("r_texColor");
 					bgfx::setTexture(1, GetRenderContext()->GetUniform(ribbonParticleSampler), m_particleRibbonTextureHandle);
@@ -266,8 +270,7 @@ void ParticleRenderer::Render(float deltaTime)
 		bgfx::setIndexBuffer(bgfx::IndexBufferHandle{ pEmitterComponent->GetEmitterShapeIndexBufferHandle() });
 		bgfx::setState(state_lines);
 
-		constexpr StringCrc programHandleIndex{ "ParticleEmitterShapeProgram" };
-		GetRenderContext()->Submit(GetViewID(), programHandleIndex);
+		GetRenderContext()->Submit(GetViewID(), ParticleEmitterShapeProgramCrc);
 	}
 }
 
@@ -277,18 +280,19 @@ void ParticleRenderer::SetRenderMode(engine::ParticleRenderMode& rendermode, eng
 	{
 		if (type == engine::ParticleType::Sprite)
 		{
-			GetRenderContext()->Submit(GetViewID(), shaderFeature_MaterialCompoent->GetShaderProgramName(), shaderFeature_MaterialCompoent->GetFeaturesCombine());
+			const ShaderResource* pShaderResource = shaderFeature_MaterialCompoent->GetShaderResource();
+			GetRenderContext()->Submit(GetViewID(), pShaderResource->GetHandle());
 		}
 		else if (type == engine::ParticleType::Ribbon)
 		{
-			GetRenderContext()->Submit(GetViewID(), RibbonParticleProgram);
+			GetRenderContext()->Submit(GetViewID(), RibbonParticleProgramCrc);
 		}
 	}
 	else if (rendermode == engine::ParticleRenderMode::Billboard)
 	{
 		if (type == engine::ParticleType::Sprite)
 		{
-			GetRenderContext()->Submit(GetViewID(), WO_BillboardParticleProgram);
+			GetRenderContext()->Submit(GetViewID(), WO_BillboardParticleProgramCrc);
 		}
 		else if (type == engine::ParticleType::Ribbon)
 		{
