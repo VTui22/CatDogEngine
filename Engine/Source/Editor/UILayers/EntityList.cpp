@@ -261,6 +261,7 @@ void EntityList::AddEntity(engine::SceneWorld* pSceneWorld)
     {
         engine::Entity entity = AddNamedEntity("ParticleEmitter");
         auto& particleEmitterComponent = pWorld->CreateComponent<engine::ParticleEmitterComponent>(entity);
+        auto& particleRibbonComponent = pWorld->CreateComponent<engine::ParticleRibbonComponent>(entity);
         auto& particleMaterialComponent = pWorld->CreateComponent<engine::MaterialComponent>(entity);
         // TODO : Some initialization here.
         auto& transformComponent = pWorld->CreateComponent<engine::TransformComponent>(entity);
@@ -271,6 +272,7 @@ void EntityList::AddEntity(engine::SceneWorld* pSceneWorld)
         particleMaterialComponent.SetMaterialType(pParticleMaterialType);
         //particleMaterialComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
         particleEmitterComponent.Build();
+        particleRibbonComponent.Build();
     }
     else if (ImGui::MenuItem("Add Particle ForceField"))
     {

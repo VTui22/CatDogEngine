@@ -60,7 +60,7 @@ void ParticleRenderer::Init()
 	GetRenderContext()->CreateUniform(shapeRange, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(particleColor, bgfx::UniformType::Vec4, 1);
 	GetRenderContext()->CreateUniform(ribbonCount, bgfx::UniformType::Vec4, 1);
-	GetRenderContext()->CreateUniform(ribbonMaxPos, bgfx::UniformType::Vec4, 75);
+	GetRenderContext()->CreateUniform(ribbonMaxPos, bgfx::UniformType::Vec4, 300);
 
 	bgfx::setViewName(GetViewID(), "ParticleRenderer");
 }
@@ -96,6 +96,7 @@ void ParticleRenderer::Render(float deltaTime)
 		const cd::Transform& particleTransform = m_pCurrentSceneWorld->GetTransformComponent(entity)->GetTransform();
 		const cd::Quaternion& particleRotation = m_pCurrentSceneWorld->GetTransformComponent(entity)->GetTransform().GetRotation();
 		ParticleEmitterComponent* pEmitterComponent = m_pCurrentSceneWorld->GetParticleEmitterComponent(entity);
+		ParticleRibbonComponent* pRibbonEmitterComponet = m_pCurrentSceneWorld->GetParticleRibbonComponent(entity);
 		MaterialComponent* pParticleMaterialComponet = m_pCurrentSceneWorld->GetMaterialComponent(entity);
 		//NOTE: This ShaderResource Not Used Just For Judge
 		const ShaderResource* pShaderResource = pParticleMaterialComponet->GetShaderResource();
@@ -182,9 +183,9 @@ void ParticleRenderer::Render(float deltaTime)
 			{
 				constexpr StringCrc ribbonParticleSampler("r_texColor");
 				bgfx::setTexture(1, GetRenderContext()->GetUniform(ribbonParticleSampler), m_particleRibbonTextureHandle);
-				bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticlePrePosVertexBufferHandle() });
-				bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleRemainVertexBufferHandle() });
-				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
+				bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pRibbonEmitterComponet->GetRibbonParticlePrePosVertexBufferHandle() });
+				bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pRibbonEmitterComponet->GetRibbonParticleRemainVertexBufferHandle() });
+				bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pRibbonEmitterComponet->GetRibbonParticleIndexBufferHandle() });
 			}
 
 			bgfx::setState(state_tristrip);
@@ -230,7 +231,7 @@ void ParticleRenderer::Render(float deltaTime)
 				}
 				else if (pEmitterComponent->GetEmitterParticleType() == engine::ParticleType::Ribbon)
 				{
-					bgfx::setBuffer(PT_RIBBON_VERTEX_STAGE, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticlePrePosVertexBufferHandle() }, bgfx::Access::ReadWrite);
+					bgfx::setBuffer(PT_RIBBON_VERTEX_STAGE, bgfx::DynamicVertexBufferHandle{ pRibbonEmitterComponet->GetRibbonParticlePrePosVertexBufferHandle() }, bgfx::Access::ReadWrite);
 
 					//ribbonCount Uinform
 					constexpr StringCrc ribbontCounts(ribbonCount);
@@ -241,23 +242,30 @@ void ParticleRenderer::Render(float deltaTime)
 					GetRenderContext()->FillUniform(ribbontCounts, &allRibbonCount, 1);
 
 					//ribbonListUniform
-					cd::Vec4f ribbonPosList[75]{};
-					for (int i = 0; i < 75; i++)
+					cd::Vec4f ribbonPosList[300]{};
+					for (int i = 0; i < 300; i++)
 					{
+						if (i >= pEmitterComponent->GetParticlePool().GetParticleMaxCount())
+						{
+							ribbonPosList[i] = cd::Vec4f(0.0f,0.0f,0.0f,0.0f);
+						}
+						else
+						{
 						ribbonPosList[i] =cd::Vec4f(pEmitterComponent->GetParticlePool().GetParticle(i).GetPos().x(),
 							pEmitterComponent->GetParticlePool().GetParticle(i).GetPos().y(),
 							pEmitterComponent->GetParticlePool().GetParticle(i).GetPos().z()
 							, 0.0f);
+						}
 					}
 					constexpr StringCrc maxPosList(ribbonMaxPos);
-					GetRenderContext()->FillUniform(maxPosList, &ribbonPosList, 75);
+					GetRenderContext()->FillUniform(maxPosList, &ribbonPosList, 300);
 					GetRenderContext()->Dispatch(GetViewID(), RibbonParticleProgramCsCrc, 1U, 1U, 1U);
 					//pEmitterComponent->UpdateRibbonPosBuffer();
 					constexpr StringCrc ribbonParticleSampler("r_texColor");
 					bgfx::setTexture(1, GetRenderContext()->GetUniform(ribbonParticleSampler), m_particleRibbonTextureHandle);
-					bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pEmitterComponent->GetRibbonParticlePrePosVertexBufferHandle() });
-					bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pEmitterComponent->GetRibbonParticleRemainVertexBufferHandle() });
-					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pEmitterComponent->GetRibbonParticleIndexBufferHandle() });
+					bgfx::setVertexBuffer(0, bgfx::DynamicVertexBufferHandle{ pRibbonEmitterComponet->GetRibbonParticlePrePosVertexBufferHandle() });
+					bgfx::setVertexBuffer(1, bgfx::VertexBufferHandle{ pRibbonEmitterComponet->GetRibbonParticleRemainVertexBufferHandle() });
+					bgfx::setIndexBuffer(bgfx::IndexBufferHandle{  pRibbonEmitterComponet->GetRibbonParticleIndexBufferHandle() });
 				}
 				SetRenderMode(pEmitterComponent->GetRenderMode(), pEmitterComponent->GetEmitterParticleType(),pParticleMaterialComponet);
 			}

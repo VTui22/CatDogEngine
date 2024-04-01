@@ -7,7 +7,7 @@ uniform vec4 u_ribbonCount;
 // x : allRibbonVertexCount
 // y : particleActiveCount
 
-uniform vec4 u_ribbonMaxPos[75];
+uniform vec4 u_ribbonMaxPos[300];
 //here have max particle count (max limit of inspector)
 
 NUM_THREADS(1u, 1u, 1u)
