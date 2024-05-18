@@ -976,10 +976,7 @@ void AssetBrowser::ImportModelFile(const char* pFilePath)
 		genericProducer.EnableOption(cdtools::GenericProducerOptions::CleanUnusedObjects);
 		genericProducer.EnableOption(cdtools::GenericProducerOptions::GenerateTangentSpace);
 		genericProducer.EnableOption(cdtools::GenericProducerOptions::TriangulateModel);
-		if (!m_importOptions.ImportAnimation)
-		{
-			genericProducer.EnableOption(cdtools::GenericProducerOptions::FlattenTransformHierarchy);
-		}
+		genericProducer.EnableOption(cdtools::GenericProducerOptions::FlattenTransformHierarchy);
 
 		cdtools::Processor processor(&genericProducer, nullptr, newSceneDatabase.get());
 		processor.EnableOption(cdtools::ProcessorOptions::Dump);
