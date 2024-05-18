@@ -103,6 +103,8 @@ void EditorApp::Init(engine::EngineInitArgs initArgs)
 
 	InitECWorld();
 	m_pEditorImGuiContext->SetSceneWorld(m_pSceneWorld.get());
+	// In order to avoid temporary handling of bugs
+	m_pSceneWorld->GetSceneDatabase()->GetMeshes().reserve(100);
 
 	InitEngineRenderers();
 
@@ -382,7 +384,7 @@ void EditorApp::OnShaderHotModifiedCallback(const char* rootDir, const char* fil
 	    // Do nothing when a non-shader file is detected.
 	    return;
 	}
-	m_pRenderContext->OnShaderHotModified(engine::StringCrc{ engine::Path::GetFileNameWithoutExtension(filePath) });
+	m_pRenderContext->OnShaderHotModified(engine::Path::GetFileNameWithoutExtension(filePath));
 }
 
 void EditorApp::UpdateMaterials()
@@ -492,6 +494,14 @@ void EditorApp::InitEngineRenderers()
 		AddEngineRenderer(cd::MoveTemp(pPBRSkyRenderer));
 	}
 
+	auto pSkeletonRenderer = std::make_unique<engine::SkeletonRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
+	pSkeletonRenderer->SetSceneWorld(m_pSceneWorld.get());
+	AddEngineRenderer(cd::MoveTemp(pSkeletonRenderer));
+
+	auto pAnimationRenderer = std::make_unique<engine::AnimationRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
+	pAnimationRenderer->SetSceneWorld(m_pSceneWorld.get());
+	AddEngineRenderer(cd::MoveTemp(pAnimationRenderer));
+
 	auto pSceneRenderer = std::make_unique<engine::WorldRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
 	m_pSceneRenderer = pSceneRenderer.get();
 	pSceneRenderer->SetSceneWorld(m_pSceneWorld.get());
@@ -515,14 +525,6 @@ void EditorApp::InitEngineRenderers()
 	m_pTerrainRenderer = pTerrainRenderer.get();
 	pTerrainRenderer->SetSceneWorld(m_pSceneWorld.get());
 	AddEngineRenderer(cd::MoveTemp(pTerrainRenderer));
-
-	auto pSkeletonRenderer = std::make_unique<engine::SkeletonRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
-	pSkeletonRenderer->SetSceneWorld(m_pSceneWorld.get());
-	AddEngineRenderer(cd::MoveTemp(pSkeletonRenderer));
-
-	auto pAnimationRenderer = std::make_unique<engine::AnimationRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
-	pAnimationRenderer->SetSceneWorld(m_pSceneWorld.get());
-	AddEngineRenderer(cd::MoveTemp(pAnimationRenderer));
 
 	auto pWhiteModelRenderer = std::make_unique<engine::WhiteModelRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
 	m_pWhiteModelRenderer = pWhiteModelRenderer.get();

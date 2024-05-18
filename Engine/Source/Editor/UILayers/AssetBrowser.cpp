@@ -839,7 +839,7 @@ void AssetBrowser::ImportAssetFile(const char* pFilePath)
 			std::filesystem::path absolutePath = CDPROJECT_RESOURCES_ROOT_PATH;
 			absolutePath /= relativePath;
 
-			CD_INFO("Compile skybox textures to {0}.", absolutePath);
+			CD_INFO("Compile skybox textures to {0}.", absolutePath.generic_string());
 
 			std::string irrdianceOutput = absolutePath.generic_string() + "_irr.dds";
 			ResourceBuilder::Get().AddIrradianceCubeMapBuildTask(pFilePath, irrdianceOutput.c_str());
@@ -997,7 +997,6 @@ void AssetBrowser::ImportModelFile(const char* pFilePath)
 	// Step 2 : Process generated cd::SceneDatabase
 	ProcessSceneDatabase(pSceneDatabase, m_importOptions.ImportMesh, m_importOptions.ImportMaterial, m_importOptions.ImportTexture,
 		m_importOptions.ImportCamera, m_importOptions.ImportLight);
-
 	// Step 3 : Convert cd::SceneDatabase to entities and components
 	{
 		ECWorldConsumer ecConsumer(pSceneWorld, pCurrentRenderContext);
