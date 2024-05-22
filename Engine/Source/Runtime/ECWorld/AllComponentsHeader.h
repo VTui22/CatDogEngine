@@ -18,4 +18,5 @@
 #include "ECWorld/TerrainComponent.h"
 #include "ECWorld/TransformComponent.h"
 #include "ECWorld/ParticleEmitterComponent.h"
+#include "ECWorld/ParticleRibbonComponent.h"
 #include "ECWorld/ParticleForceFieldComponent.h"

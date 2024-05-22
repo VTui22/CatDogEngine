@@ -38,6 +38,7 @@ SceneWorld::SceneWorld()
 	m_pSkinMeshComponentStorage = m_pWorld->Register<engine::SkinMeshComponent>();
 	m_pSkeletonComponentStorage = m_pWorld->Register<engine::SkeletonComponent>();
 	m_pParticleEmitterComponentStorage = m_pWorld->Register<engine::ParticleEmitterComponent>();
+	m_pParticleRibbonComponentStorage = m_pWorld->Register<engine::ParticleRibbonComponent>();
 	m_pParticleForceFieldComponentStorage = m_pWorld->Register<engine::ParticleForceFieldComponent>();
 	m_pTerrainComponentStorage = m_pWorld->Register<engine::TerrainComponent>();
 	m_pTransformComponentStorage = m_pWorld->Register<engine::TransformComponent>();

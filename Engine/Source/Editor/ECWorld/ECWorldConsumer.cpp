@@ -438,6 +438,7 @@ void ECWorldConsumer::AddParticleEmitter(engine::Entity entity, const cd::Mesh& 
 	engine::NameComponent& nameComponent = pWorld->CreateComponent<engine::NameComponent>(entity);
 	nameComponent.SetName(emitter.GetName());
 	auto& particleEmitterComponent = pWorld->CreateComponent<engine::ParticleEmitterComponent>(entity);
+	auto& particleMaterialComponent = pWorld->CreateComponent<engine::MaterialComponent>(entity);
 	// TODO : Some initialization here.
 	auto& transformComponent = pWorld->CreateComponent<engine::TransformComponent>(entity);
 	cd::Vec3f pos = emitter.GetPosition();
@@ -465,8 +466,8 @@ void ECWorldConsumer::AddParticleEmitter(engine::Entity entity, const cd::Mesh& 
 	particleEmitterComponent.SetEmitterVelocity(emitter.GetVelocity());
 	particleEmitterComponent.SetEmitterAcceleration(emitter.GetAccelerate());
 	particleEmitterComponent.SetMeshData(&mesh); 
-	particleEmitterComponent.SetMaterialType(pMaterialType);
-	particleEmitterComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
+	particleMaterialComponent.SetMaterialType(pMaterialType);
+	//particleMaterialComponent.ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 	particleEmitterComponent.Build();
 }
 

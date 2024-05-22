@@ -653,6 +653,7 @@ template<>
 void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld* pSceneWorld, engine::Entity entity)
 {
 	auto* pParticleEmitterComponent = pSceneWorld->GetParticleEmitterComponent(entity);
+	auto* pParticleMaterialComponent = pSceneWorld->GetMaterialComponent(entity);
 	if (!pParticleEmitterComponent)
 	{
 		return;
@@ -664,7 +665,7 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 
 	if (isOpen)
 	{
-		ImGuiUtils::ImGuiEnumProperty("Render  Mode", pParticleEmitterComponent->GetRenderMode());
+		ImGuiUtils::ImGuiEnumProperty("Render  Mode(Work Type Sprite)", pParticleEmitterComponent->GetRenderMode());
 		ImGuiUtils::ImGuiEnumProperty("Particle Type", pParticleEmitterComponent->GetEmitterParticleType());
 		//ImGuiUtils::ImGuiEnumProperty("Emitter Shape", pParticleEmitterComponent->GetEmitterShape());
 		ImGuiUtils::ImGuiVectorProperty("Emitter Range", pParticleEmitterComponent->GetEmitterShapeRange());
@@ -672,17 +673,16 @@ void UpdateComponentWidget<engine::ParticleEmitterComponent>(engine::SceneWorld*
 		ImGuiUtils::ImGuiIntProperty("Max Count", pParticleEmitterComponent->GetSpawnCount(), cd::Unit::None, 1, 300);
 		ImGuiUtils::ImGuiVectorProperty("Velocity", pParticleEmitterComponent->GetEmitterVelocity());
 		ImGuiUtils::ImGuiVectorProperty("Random Velocity", pParticleEmitterComponent->GetRandomVelocity());
-		ImGuiUtils::ImGuiBoolProperty("RandomVelocity", pParticleEmitterComponent->GetRandomVelocityState());
+		ImGuiUtils::ImGuiBoolProperty("RandomVelocity State", pParticleEmitterComponent->GetRandomVelocityState());
 		ImGuiUtils::ImGuiVectorProperty("Acceleration", pParticleEmitterComponent->GetEmitterAcceleration());
 		ImGuiUtils::ColorPickerProperty("Color", pParticleEmitterComponent->GetEmitterColor());
-		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime());
-		if (ImGuiUtils::ImGuiBoolProperty("Instance State", pParticleEmitterComponent->GetInstanceState()))
+		ImGuiUtils::ImGuiFloatProperty("LifeTime", pParticleEmitterComponent->GetLifeTime(),cd::Unit::None, 0, 6);
+		bool featureChanged = ImGuiUtils::ImGuiBoolProperty("Instance State(Work Type Sprite)", pParticleEmitterComponent->GetInstanceState());
+		if (featureChanged)
 		{
-			pParticleEmitterComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
-		}
-		else
-		{
-			pParticleEmitterComponent->DeactivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
+			pParticleEmitterComponent->GetInstanceState() ?
+			  pParticleMaterialComponent->ActivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE) :
+			pParticleMaterialComponent->DeactivateShaderFeature(engine::ShaderFeature::PARTICLE_INSTANCE);
 		}
 	}
 
