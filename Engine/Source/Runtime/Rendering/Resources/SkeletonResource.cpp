@@ -185,9 +185,9 @@ void SkeletonResource::ClearSkeletonData()
 
 void SkeletonResource::FreeSkeletonData()
 {
-	//ClearSkeletonData();
-	//VertexBuffer().swap(m_vertexBuffer);
-	//IndexBuffer().swap(m_indexBuffer);
+	ClearSkeletonData();
+	VertexBuffer().swap(m_vertexBuffer);
+	IndexBuffer().swap(m_indexBuffer);
 }
 
 void SkeletonResource::DestroyVertexBufferHandle()
