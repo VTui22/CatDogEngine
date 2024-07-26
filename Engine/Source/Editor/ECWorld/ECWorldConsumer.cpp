@@ -66,7 +66,7 @@ void ECWorldConsumer::Execute(const cd::SceneDatabase* pSceneDatabase)
 			{
 				engine::MaterialType* pMaterialType = m_pSceneWorld->GetAnimationMaterialType();
 				AddSkinMesh(meshEntity, mesh, pMaterialType->GetRequiredVertexFormat(), pSceneDatabase);
-				AddAnimation(meshEntity, pSceneDatabase->GetAnimation(0), pSceneDatabase);
+				//AddAnimation(meshEntity, pSceneDatabase->GetAnimation(0), pSceneDatabase);
 				AddMaterial(meshEntity, nullptr, pMaterialType, pSceneDatabase);
 				AddSkeleton(meshEntity, pSceneDatabase);
 			}

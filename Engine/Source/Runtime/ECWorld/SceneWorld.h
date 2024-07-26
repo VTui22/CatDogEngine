@@ -47,6 +47,7 @@ class SceneWorld
 	DEFINE_COMPONENT_STORAGE_WITH_APIS(ParticleForceField);
 	DEFINE_COMPONENT_STORAGE_WITH_APIS(Terrain);
 	DEFINE_COMPONENT_STORAGE_WITH_APIS(Transform);
+	DEFINE_COMPONENT_STORAGE_WITH_APIS(MotionMatching);
 
 public:
 	SceneWorld();
@@ -108,6 +109,7 @@ public:
 		DeleteParticleForceFieldComponent(entity);
 		DeleteTerrainComponent(entity);
 		DeleteTransformComponent(entity);
+		DeleteMotionMatchingComponent(entity);
 	}
 
 	void CreatePBRMaterialType(std::string shaderProgramName, bool isAtmosphericScatteringEnable = false);

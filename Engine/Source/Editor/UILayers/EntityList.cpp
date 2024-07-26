@@ -14,8 +14,18 @@
 #include <bgfx/bgfx.h>
 #include <imgui/imgui_internal.h>
 
+#include <Utilities/MeshUtils.hpp>
+
+#include "Rendering/MotionMatching.h"
+
 namespace editor
 {
+
+void* MemAlloc(unsigned int size)
+{
+    void* ptr = calloc(size, 1);
+    return ptr;
+}
 
 EntityList::~EntityList()
 {
@@ -25,6 +35,8 @@ EntityList::~EntityList()
 void EntityList::Init()
 {
 }
+
+
 
 void EntityList::AddEntity(engine::SceneWorld* pSceneWorld)
 {
@@ -318,6 +330,59 @@ void EntityList::AddEntity(engine::SceneWorld* pSceneWorld)
             }
         }
 
+    }
+
+    else if (ImGui::MenuItem("Motion Matching"))
+    {
+        engine::Entity entity = AddNamedEntity("Man");
+        character character_data;
+        character_load(character_data, "C:/Users/zw186/OneDrive/Desktop/catdog/CatDogEngine/Engine/Source/Runtime/MotionMatching/resources/character.bin");
+
+        cd::Mesh mesh;
+        mesh.Init(static_cast<uint32_t>(character_data.positions.size));
+        for (uint32_t i = 0U; i < character_data.positions.size; ++i)
+        {
+            cd::Vec3f vertexPosition = cd::Vec3f(character_data.positions.data[i].x, character_data.positions.data[i].y, character_data.positions.data[i].z);
+            mesh.SetVertexPosition(i, vertexPosition);
+           
+            cd::Vec3f vertexNormal = cd::Vec3f(character_data.normals.data[i].x, character_data.normals.data[i].y, character_data.normals.data[i].z);
+            mesh.SetVertexNormal(i, vertexNormal);
+        }
+        cd::PolygonGroup polygonGroup;
+        for (uint32_t i = 0U; i < character_data.triangles.size / 3; ++i)
+        {
+            cd::Polygon polygon;
+            polygon.push_back(character_data.triangles.data[i * 3]);
+            polygon.push_back(character_data.triangles.data[i * 3 + 1]);
+            polygon.push_back(character_data.triangles.data[i * 3 + 2]);
+            polygonGroup.push_back(polygon);
+        }
+        mesh.AddPolygonGroup(cd::MoveTemp(polygonGroup));
+
+        cd::VertexFormat meshVertexFormat;
+        meshVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::Position, cd::GetAttributeValueType<cd::Point::ValueType>(), cd::Point::Size);
+        //meshVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::UV, cd::GetAttributeValueType<cd::UV::ValueType>(), cd::UV::Size);
+        meshVertexFormat.AddVertexAttributeLayout(cd::VertexAttributeType::Normal, cd::GetAttributeValueType<cd::Direction::ValueType>(), cd::Direction::Size);
+        mesh.SetVertexFormat(MoveTemp(meshVertexFormat));
+       // CreateShapeComponents(entity, cd::MoveTemp(mesh), pPBRMaterialType);
+         
+        auto& MotionMatchingComponent = pWorld->CreateComponent<engine::MotionMatchingComponent>(entity);
+        Mesh motionMatchingMesh = { 0 };
+
+        motionMatchingMesh.vertexCount = character_data.positions.size;
+        motionMatchingMesh.triangleCount = character_data.triangles.size / 3;
+        motionMatchingMesh.vertices = (float*)MemAlloc(character_data.positions.size * 3 * sizeof(float));
+        motionMatchingMesh.texcoords = (float*)MemAlloc(character_data.texcoords.size * 2 * sizeof(float));
+        motionMatchingMesh.normals = (float*)MemAlloc(character_data.normals.size * 3 * sizeof(float));
+        motionMatchingMesh.indices = (unsigned short*)MemAlloc(character_data.triangles.size * sizeof(unsigned short));
+
+        memcpy(motionMatchingMesh.vertices, character_data.positions.data, character_data.positions.size * 3 * sizeof(float));
+        memcpy(motionMatchingMesh.texcoords, character_data.texcoords.data, character_data.texcoords.size * 2 * sizeof(float));
+        memcpy(motionMatchingMesh.normals, character_data.normals.data, character_data.normals.size * 3 * sizeof(float));
+        memcpy(motionMatchingMesh.indices, character_data.triangles.data, character_data.triangles.size * sizeof(unsigned short));
+        MotionMatchingComponent.SetMesh(motionMatchingMesh);
+        MotionMatchingComponent.SetCDMesh(mesh);
+        
     }
 }
 

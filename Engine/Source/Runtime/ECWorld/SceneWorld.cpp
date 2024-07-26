@@ -42,6 +42,7 @@ SceneWorld::SceneWorld()
 	m_pParticleForceFieldComponentStorage = m_pWorld->Register<engine::ParticleForceFieldComponent>();
 	m_pTerrainComponentStorage = m_pWorld->Register<engine::TerrainComponent>();
 	m_pTransformComponentStorage = m_pWorld->Register<engine::TransformComponent>();
+	m_pMotionMatchingComponentStorage = m_pWorld->Register<engine::MotionMatchingComponent>();
 	
 #ifdef ENABLE_DDGI
 	CreateDDGIMaterialType();

@@ -69,12 +69,7 @@ void CollisionMeshComponent::Build()
 		2U,3U,3U,7U,7U,6U,6U,2U
 	};
 
-	for (const auto& index : indexes)
-	{
-		std::memcpy(&currentDataPtr[currentDataSize], &index, indexTypeSize);
-		currentDataSize += static_cast<uint32_t>(indexTypeSize);
-	}
-
+	std::memcpy(&currentDataPtr[0], &indexes[0], indexTypeSize * 24);
 	bgfx::VertexLayout vertexLayout;
 	VertexLayoutUtility::CreateVertexLayout(vertexLayout, vertexFormat.GetVertexAttributeLayouts());
 	m_aabbVBH = bgfx::createVertexBuffer(bgfx::makeRef(m_aabbVertexBuffer.data(), static_cast<uint32_t>(m_aabbVertexBuffer.size())), vertexLayout).idx;

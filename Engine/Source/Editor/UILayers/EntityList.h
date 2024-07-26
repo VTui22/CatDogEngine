@@ -1,10 +1,10 @@
+#pragma once
 #include "ImGui/ImGuiBaseLayer.h"
 
 #include "ECWorld/Entity.h"
 
 #include <imgui/imgui.h>
 #include <memory>
-
 namespace engine
 {
 

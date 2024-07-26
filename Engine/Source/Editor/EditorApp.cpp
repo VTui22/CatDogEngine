@@ -37,6 +37,7 @@
 #include "Rendering/ParticleForceFieldRenderer.h"
 #include "Rendering/OutLineRenderer.h"
 #include "Rendering/ParticleRenderer.h"
+#include "Rendering/MotionMatching.h"
 #include "Resources/FileWatcher.h"
 #include "Resources/ResourceBuilder.h"
 #include "Resources/ShaderBuilder.h"
@@ -539,6 +540,10 @@ void EditorApp::InitEngineRenderers()
 	auto pParticleForceFieldRenderer = std::make_unique<engine::ParticleForceFieldRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
 	pParticleForceFieldRenderer->SetSceneWorld(m_pSceneWorld.get());
 	AddEngineRenderer(cd::MoveTemp(pParticleForceFieldRenderer));
+
+	auto pMotionMatchingRenderer = std::make_unique<engine::MotionMatching>(m_pRenderContext->CreateView(), pSceneRenderTarget);
+	pMotionMatchingRenderer->SetSceneWorld(m_pSceneWorld.get());
+	AddEngineRenderer(cd::MoveTemp(pMotionMatchingRenderer));
 
 #ifdef ENABLE_DDGI
 	auto pDDGIRenderer = std::make_unique<engine::DDGIRenderer>(m_pRenderContext->CreateView(), pSceneRenderTarget);
